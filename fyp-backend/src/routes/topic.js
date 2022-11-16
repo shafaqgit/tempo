@@ -1,0 +1,35 @@
+const express = require('express');
+const router = express.Router();
+const Topic = require('../models/topic');
+
+router.post('/addTopic',(req, res) =>{
+   
+    Topic.findOne({ tName: req.body.tName})
+    .exec((error,topic) => {
+        if(topic) return res.status(400).json({
+        message: 'Given Topic already added'
+     });
+     const {
+        tName
+     } = req.body;
+     console.log("Sent request of topic: "+req.body.tName);
+     const _topic = new Topic({
+        tName
+    });
+    _topic.save((error , data)=>{
+        if(error){
+            return res.status(400).json({
+                message: 'Topic could not be added...Something went wrong'
+            });
+        }
+        if(data)
+        {
+            return res.status(200).json({
+                topic:data
+            })
+        }
+      });
+    });
+});
+
+module.exports = router;
