@@ -10,11 +10,12 @@ const userRoutes= require('./routes/user');
 const QuesRoutes= require('./routes/question');
 const topicRoutes= require('./routes/topic');
 const difficultyRoutes= require('./routes/difficulty');
+const categoryRoutes= require('./routes/category');
 //environment variable
 env.config();
 //mongo connection
-//mongodb+srv://root:<password>@cluster0.sf0pb7x.mongodb.net/?retryWrites=true&w=majority
 mongoose.connect(
+    //mongodb+srv://root:<password>@cluster0.sf0pb7x.mongodb.net/?retryWrites=true&w=majority
     `mongodb+srv://ibtisam:shehifib.90@cluster0.07v8s.mongodb.net/PROJECT0?retryWrites=true&w=majority`,
     {
         useNewUrlParser: true,
@@ -29,17 +30,7 @@ app.use('/api', userRoutes);
 app.use('/api', QuesRoutes);
 app.use('/api', topicRoutes);
 app.use('/api', difficultyRoutes);
-
-
-// mongoose.connect(
-//     `mongodb+srv://ibtisam:shehifib.90@cluster0.07v8s.mongodb.net/PROJECT0?retryWrites=true&w=majority`,
-//     {
-//         useNewUrlParser: true,
-//         useUnifiedTopology: true
-//     }
-//     ).then(() =>{
-//         console.log('Database Connected');
-//     });
+app.use('/api', categoryRoutes);
 
 
 app.listen(process.env.PORT, () => {

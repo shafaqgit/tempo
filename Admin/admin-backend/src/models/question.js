@@ -18,6 +18,10 @@ const QuestionSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId, ref: 'Difficulty',
       required:true,
      },
+    category: { 
+      type: mongoose.Schema.Types.ObjectId, ref: 'Category',
+      required:true,
+     },
 }, {
   toJSON: {
     virtuals: true,
