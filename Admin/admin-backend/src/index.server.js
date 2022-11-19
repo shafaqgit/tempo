@@ -9,6 +9,7 @@ var multiparty = require('multiparty');
 const userRoutes= require('./routes/user');
 const QuesRoutes= require('./routes/question');
 const topicRoutes= require('./routes/topic');
+const difficultyRoutes= require('./routes/difficulty');
 //environment variable
 env.config();
 //mongo connection
@@ -27,6 +28,7 @@ app.use(bodyParse());//json to pass data
 app.use('/api', userRoutes);
 app.use('/api', QuesRoutes);
 app.use('/api', topicRoutes);
+app.use('/api', difficultyRoutes);
 
 
 // mongoose.connect(

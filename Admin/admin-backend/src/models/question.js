@@ -10,7 +10,14 @@ const QuestionSchema = new mongoose.Schema({
         required:true,
     },
     options: [],
-    topic: { type: mongoose.Schema.Types.ObjectId, ref: 'Topic' },
+    topic: { 
+      type: mongoose.Schema.Types.ObjectId, ref: 'Topic',
+      required:true,
+     },
+    difficulty: { 
+      type: mongoose.Schema.Types.ObjectId, ref: 'Difficulty',
+      required:true,
+     },
 }, {
   toJSON: {
     virtuals: true,
