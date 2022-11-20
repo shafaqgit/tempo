@@ -6,7 +6,8 @@ const mongoose = require('mongoose');
 var multiparty = require('multiparty');
 
 //routes
-const userRoutes= require('./routes/user');
+const authRoutes= require('./routes/auth');
+const adminRoutes= require('./routes/admin/auth');
 const QuesRoutes= require('./routes/question');
 const topicRoutes= require('./routes/topic');
 const difficultyRoutes= require('./routes/difficulty');
@@ -16,7 +17,7 @@ env.config();
 //mongo connection
 mongoose.connect(
     //mongodb+srv://root:<password>@cluster0.sf0pb7x.mongodb.net/?retryWrites=true&w=majority
-    `mongodb+srv://ibtisam:shehifib.90@cluster0.07v8s.mongodb.net/PROJECT0?retryWrites=true&w=majority`,
+    `mongodb+srv://ibtisam:shehifib.90@cluster0.07v8s.mongodb.net/fyp?retryWrites=true&w=majority`,
     {
         useNewUrlParser: true,
         useUnifiedTopology: true
@@ -26,7 +27,8 @@ mongoose.connect(
 });
 //app.use(bodyParser());
 app.use(bodyParse());//json to pass data
-app.use('/api', userRoutes);
+app.use('/api', authRoutes);
+app.use('/api', adminRoutes);
 app.use('/api', QuesRoutes);
 app.use('/api', topicRoutes);
 app.use('/api', difficultyRoutes);
