@@ -4,6 +4,10 @@ const app = express();
 const bodyParse = require('body-parser');
 const mongoose = require('mongoose');
 var multiparty = require('multiparty');
+const upload = require('express-fileupload');
+const axios = require('axios');
+
+app.use(upload());
 
 //routes
 const authRoutes= require('./routes/auth');
@@ -17,7 +21,7 @@ env.config();
 //mongo connection
 mongoose.connect(
     //mongodb+srv://root:<password>@cluster0.sf0pb7x.mongodb.net/?retryWrites=true&w=majority
-    `mongodb+srv://ibtisam:shehifib.90@cluster0.07v8s.mongodb.net/fyp?retryWrites=true&w=majority`,
+    `mongodb+srv://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASSWORD}@cluster0.07v8s.mongodb.net/${process.env.MONGO_DB_DATABASE}?retryWrites=true&w=majority`,
     {
         useNewUrlParser: true,
         useUnifiedTopology: true
@@ -25,8 +29,12 @@ mongoose.connect(
     }).then(() => {
       console.log('Database connected');
 });
-//app.use(bodyParser());
-app.use(bodyParse());//json to pass data
+
+app.use(bodyParse.urlencoded({
+    extended: true
+  }));
+app.use(bodyParse.json());
+
 app.use('/api', authRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', QuesRoutes);
