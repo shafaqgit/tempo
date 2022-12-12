@@ -41,7 +41,18 @@ const userSchema = new mongoose.Schema({
     default:'admin'
    },
    contactNumber:{ type: String},
-   profilePicture:{ type: String}
+   profilePicture: {
+    type: String,
+    default: "",
+  },
+   friends: {
+    type: Array,
+    default: [],
+  },
+  friendRequests: {
+    type: Array,
+    default: [],
+  }
 
 },{timestamps: true});
 

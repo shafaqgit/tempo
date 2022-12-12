@@ -16,6 +16,7 @@ const QuesRoutes= require('./routes/question');
 const topicRoutes= require('./routes/topic');
 const difficultyRoutes= require('./routes/difficulty');
 const categoryRoutes= require('./routes/category');
+const userRoutes= require('./routes/user');
 //environment variable
 env.config();
 //mongo connection
@@ -41,6 +42,7 @@ app.use('/api', QuesRoutes);
 app.use('/api', topicRoutes);
 app.use('/api', difficultyRoutes);
 app.use('/api', categoryRoutes);
+app.use('/api', userRoutes);
 
 
 app.listen(process.env.PORT, () => {

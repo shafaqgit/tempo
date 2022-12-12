@@ -60,41 +60,70 @@ router.post("/Parser", (req, res) => {
         // Remove empty lines
         if (/^\s*$/.test(data[i])) continue;
         // Split data line on cells
-        const quesProp = data[i].split("/").map((s) => s.trim());
+        const quesProp = data[i].split(",").map((s) =>s.trim());
         // Checking if any property of question missing
         if (quesProp.length < 3 || i + 2 >= data.length) {
             console.log("Issue in any of the Question Properties");
             continue;
         }
         // Checking if the Question-content in right format
-        if (data[i + 1].split("|").length > 1) {
+        if (data[i + 1][1]=='.' || data[i + 1][2]=='.') {
             console.log("Issue in any of the Question-Content");
             continue;
         }
         const quesContent = data[i + 1].trim();
-        var quesOpts = data[i + 2].split("|").map((s) => s.trim());
+        var quesAns = "";
+        var totalOpts=0;
+        var quesOpts=[];
+        while(data[i + 2+ totalOpts][1]=='.' || data[i + 2 + totalOpts][2]=='.'){
+          if(data[i + 2+ totalOpts][0]=='*'){
+
+            var tmp = data[i + 2+ totalOpts].split("");
+            tmp.splice(0, 3);
+            data[i + 2+ totalOpts] = tmp.join("").trim();
+
+            quesAns = data[i + 2+ totalOpts];
+            quesOpts.push(quesAns);
+            totalOpts++;
+            if((i + 2+ totalOpts)>=data.length){
+              break;
+            }
+            continue;
+          }
+          var tmp = data[i + 2+ totalOpts].split("");
+            tmp.splice(0, 2);
+            data[i + 2+ totalOpts] = tmp.join("").trim();
+            quesOpts.push( data[i + 2+ totalOpts]);
+
+          totalOpts++;
+          if((i + 2+ totalOpts)>=data.length){
+            break;
+          }
+        }
+
+        // var quesOpts = data[i + 2].split("|").map((s) => s.trim());
         if (quesOpts.length < 2) {
             console.log("Issue in any of the Question Option");
             continue;
         }
-        var quesAns = "";
+        
 
-        for (let i = 0; i < quesOpts.length; i++) {
-            // Searching for the Answer (having *- at the start)
-            if (quesOpts[i][0] == "*" && quesOpts[i][1] == "-") {
-            // Removing and Answer identification and storing it in Answer
-            var tmp = quesOpts[i].split("");
-            tmp.splice(0, 2);
-            quesOpts[i] = tmp.join("").trim();
+        // for (let i = 0; i < quesOpts.length; i++) {
+        //     // Searching for the Answer (having *- at the start)
+        //     if (quesOpts[i][0] == "*" && quesOpts[i][1] == "-") {
+        //     // Removing and Answer identification and storing it in Answer
+        //     var tmp = quesOpts[i].split("");
+        //     tmp.splice(0, 2);
+        //     quesOpts[i] = tmp.join("").trim();
 
-            quesAns = quesOpts[i];
-            break;
-            }
-        }
+        //     quesAns = quesOpts[i];
+        //     break;
+        //     }
+        // }
         // // Loop cells
         let jsonLine = {};
         for (let i = 0; i < quesProp.length; i++)
-            jsonLine[headers[i]] = quesProp[i];
+            jsonLine[headers[i]] = quesProp[i].toLowerCase();
 
         jsonLine[headers[quesProp.length]] = quesContent;
 
@@ -104,11 +133,11 @@ router.post("/Parser", (req, res) => {
 
         // // Push new line to json array
         json.push(jsonLine);
-        i = i + 2;
+        i = i + 1+ quesOpts.length;
         }
 
         // Result
-        console.log("Going to Upload on Database");
+        console.log("Going to Upload on Database:",json);
         axios
         .post("http://localhost:2000/api/uploadQuesList", {
             quesList: json,
@@ -175,7 +204,7 @@ router.post("/uploadQuesList", (req, res) => {
               console.log("Error From adding diff-level in ques.......", err)
             );
         } else {
-          console.log("Given Topic not found in Database");
+          console.log("Given Topic "+req.body.quesList[ques].topic +" not found in Database");
         }
       })
       .catch((err) =>

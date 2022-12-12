@@ -3,8 +3,9 @@ const router = express.Router();
 const Category = require('../models/category');
 
 router.post('/addCategory',(req, res) =>{
+    req.body.cName=req.body.cName.toLowerCase();
    
-    Category.findOne({ tName: req.body.tName})
+    Category.findOne({ cName: req.body.cName})
     .exec((error,category) => {
         if(category) return res.status(400).json({
         message: 'Given Category already added'
@@ -12,7 +13,7 @@ router.post('/addCategory',(req, res) =>{
      const {
         cName
      } = req.body;
-     console.log("Sent request of Category: "+req.body.tName);
+     console.log("Sent request of Category: "+req.body.cName);
      const _category = new Category({
         cName
     });

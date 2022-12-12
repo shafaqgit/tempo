@@ -1,0 +1,16 @@
+{
+  "name": "socket",
+  "version": "1.0.0",
+  "description": "It would demonstrate the realtime things",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "Ibtisam-Ur-Rehman",
+  "license": "ISC",
+  "dependencies": {
+    "@expo/webpack-config": "0.17.2",
+    "nodemon": "^2.0.20",
+    "socket.io": "^4.5.4"
+  }
+}

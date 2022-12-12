@@ -4,6 +4,7 @@ const Difficulty = require('../models/difficulty');
 
 router.post('/addDifficulty',(req, res) =>{
    
+    req.body.dName=req.body.dName.toLowerCase();
     Difficulty.findOne({ dName: req.body.dName})
     .exec((error,difficulty) => {
         if(difficulty) return res.status(400).json({
