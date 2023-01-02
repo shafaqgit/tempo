@@ -1,9 +1,11 @@
-const io = require("socket.io")(3000,{
-    cors:{
-        origin:"http://192.168.42.232:19000",
-    },
+const express=require("express");
+const app=express();
+const server= require("http").createServer(app);
+const io=require("socket.io")(server);
+const port=8080;
+
+io.on("connection", socket=> {
+  console.log("A user connected");
 });
 
-io.on("connection", (socket)=>{
-    console.log("A user connected");
-})
+server.listen(port,  ()=> console.log("server running on port "+ port));

@@ -4,25 +4,28 @@ const app = express();
 const bodyParse = require('body-parser');
 const mongoose = require('mongoose');
 
-const io = require("socket.io")(4000,{
-  cors:{
-      origin:"http://192.168.42.232:19000",
-  },
-});
 
-io.on("connection", (socket)=>{
-  console.log("A user connected");
-})
+
+// const io = require("socket.io")(4000,{
+//   cors:{
+//       origin:"http://192.168.42.232:19000",
+//   },
+// });
+
+// io.on("connection", (socket)=>{
+//   console.log("A user connected");
+// })
 
 
 //routes
 const authRoutes= require('./routes/auth');
-const adminRoutes= require('./routes/admin/auth');
+const playerRoutes= require('./routes/player/auth');
 const QuesRoutes= require('./routes/question');
 const topicRoutes= require('./routes/topic');
 const difficultyRoutes= require('./routes/difficulty');
 const categoryRoutes= require('./routes/category');
 const userRoutes= require('./routes/user');
+const socketRoute= require('./socketServer');
 //environment variable
 env.config();
 //mongo connection
@@ -43,7 +46,7 @@ app.use(bodyParse.urlencoded({
 app.use(bodyParse.json());
 
 app.use('/api', authRoutes);
-app.use('/api', adminRoutes);
+app.use('/api', playerRoutes);
 app.use('/api', QuesRoutes);
 app.use('/api', topicRoutes);
 app.use('/api', difficultyRoutes);
