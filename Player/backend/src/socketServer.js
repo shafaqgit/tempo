@@ -4,15 +4,24 @@ const server= require("http").createServer(app);
 const io=require("socket.io")(server);
 const port=8080;
 
-io.on("connection", socket=> {
-  console.log("A user connected");
-    // send the message to client
-  socket.emit("hello", "world");
+const onlineUsers = new Set();
 
-   // recieve a message from the client
-   socket.on("howdy", (arg)=>{
-    console.log(arg);
-   });
+io.on("connection", socket=> {
+  // console.log("A user connected.."); 
+    // send the message to client
+  socket.on('login', userId => {
+    onlineUsers.add(userId);
+    console.log("Online users list: ",onlineUsers);
+    io.emit('online', userId);
+
+    
+  });
+
+  socket.on('logout', userId => {
+    onlineUsers.delete(userId);
+    console.log(userId," left the game."," New Online users list: ",onlineUsers);
+    io.emit('offline', userId);
+  });
 });
 
 

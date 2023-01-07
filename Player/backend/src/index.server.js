@@ -3,9 +3,9 @@ const env = require ('dotenv');
 const app = express();
 const bodyParse = require('body-parser');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
-
-
+app.use(cors());
 // const io = require("socket.io")(4000,{
 //   cors:{
 //       origin:"http://192.168.42.232:19000",

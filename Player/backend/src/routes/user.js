@@ -1,6 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+ // Store the selected Pictures in the 'public/uploads' directory
+const Storage=multer.diskStorage({
+  destination : './public/uploads/',
+  filename: (req, file, cb)=>{
+    // cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    cb(null, file.originalname);
+  }
+});
+
+const upload = multer({
+  storage: Storage
+});
 
 //Send request to a user
 
@@ -18,6 +34,34 @@ router.put("/:id/request", async (req, res) => {
         res.status(200).json("Friend Request has been sent");
       } else {
         res.status(403).json("You have already Requested this user");
+      }
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("You cannot send request to yourself");
+  }
+});
+
+
+//Remove user from the friend-list
+
+router.put("/:id/unfriend", async (req, res) => {
+  // req.body.userId --> ID of Current-User (In Body)
+  // req.params.id --> ID of user to be removed (In URL)
+  if (req.body.userId !== req.params.id) {
+    try {
+      const user = await User.findById(req.params.id);
+      const currentUser = await User.findById(req.body.userId);
+      if (user.friends.includes(req.body.userId)) {
+
+        await currentUser.updateOne({ $pull: { friends: user._id } });
+
+        await user.updateOne({ $pull: { friends: currentUser._id } });
+        //   await currentUser.updateOne({ $push: { followings: req.params.id } });
+        res.status(200).json("Friend has been removed from the friend-list");
+      } else {
+        res.status(403).json("The user is not in your friend list");
       }
     } catch (err) {
       res.status(500).json(err);
@@ -57,6 +101,34 @@ router.put("/:id/accept", async (req, res) => {
     res.status(403).json("You cannot become friend of yourself");
   }
 });
+
+//Decline request of user
+
+router.put("/:id/decline", async (req, res) => {
+  // req.body.userId --> ID of Current-User
+  // req.params.id --> ID of Requested-User
+  if (req.body.userId !== req.params.id) {
+    try {
+      const user = await User.findById(req.params.id);
+      const currentUser = await User.findById(req.body.userId);
+
+      if (currentUser.friendRequests.includes(req.params.id)) {
+        await currentUser.updateOne({ $pull: { friendRequests: user._id } });
+
+        await user.updateOne({ $pull: { sentRequests: currentUser._id } });
+
+        res.status(200).json("Friend Request has been declined");
+      } else {
+        res.status(403).json("Request cannot be declined");
+      }
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("You cannot become friend of yourself");
+  }
+});
+
 
 //get friends
 router.get("/friends/:userId", async (req, res) => {
@@ -143,6 +215,7 @@ router.get("/nonFriends/:userId", async (req, res) => {
         { _id: { $nin: user.friendRequests } },
         { _id: { $nin: user.sentRequests } },
         { _id: { $nin: user.friends } },
+        { _id: { $nin: user._id } },
       ],
     }).exec((error, user) => {
       if (error) {
@@ -160,7 +233,18 @@ router.get("/nonFriends/:userId", async (req, res) => {
 });
 
 // Edit the profile of user
-router.put("/:id/edit", async (req, res) => {
+router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
+  
+  fs.readFile('./public/uploads/'+req.file.filename, (error, data) => {
+    if (error) throw error;
+  
+    // Convert the data to a base64-encoded string
+    const encoded = Buffer.from(data).toString('base64');
+  
+    // Store the encoded string in the database
+    // storeInDatabase(encoded);
+//  console.log("Encoded pic: ",encoded);
+
   User.findOneAndUpdate(
     { _id: req.params.id },
     {
@@ -168,7 +252,7 @@ router.put("/:id/edit", async (req, res) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
-        profilePicture: req.body.profilePicture,
+        profilePicture: encoded,
       },
     },
     { new: true },
@@ -178,6 +262,7 @@ router.put("/:id/edit", async (req, res) => {
       } else return res.status(200).json(ans);
     }
   );
+});
 });
 
 
