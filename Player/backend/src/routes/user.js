@@ -18,6 +18,15 @@ const upload = multer({
   storage: Storage
 });
 
+
+//get Profile Picture
+router.get('/Image/:id', async (req, res) => {
+
+  let reqPath = path.join(__dirname, '../../');
+  const filepath = `${reqPath}/public/uploads/${req.params.id}`;
+  res.sendFile(filepath);
+});
+
 //Send request to a user
 
 router.put("/:id/request", async (req, res) => {
@@ -235,15 +244,12 @@ router.get("/nonFriends/:userId", async (req, res) => {
 // Edit the profile of user
 router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
   
-  fs.readFile('./public/uploads/'+req.file.filename, (error, data) => {
-    if (error) throw error;
+  // fs.readFile('./public/uploads/'+req.file.filename, (error, data) => {
+  //   if (error) throw error;
   
-    // Convert the data to a base64-encoded string
-    const encoded = Buffer.from(data).toString('base64');
+  //   // Convert the data to a base64-encoded string
+  //   const encoded = Buffer.from(data).toString('base64');
   
-    // Store the encoded string in the database
-    // storeInDatabase(encoded);
-//  console.log("Encoded pic: ",encoded);
 
   User.findOneAndUpdate(
     { _id: req.params.id },
@@ -252,7 +258,7 @@ router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
-        profilePicture: encoded,
+        profilePicture: req.file.filename,
       },
     },
     { new: true },
@@ -263,7 +269,7 @@ router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
     }
   );
 });
-});
+// });
 
 
 module.exports = router;

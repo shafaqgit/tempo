@@ -42,7 +42,8 @@ const userSchema = new mongoose.Schema({
    },
    contactNumber:{ type: String},
    profilePicture: {
-    type: Buffer
+    type: String,
+    default: "",
   },
    friends: {
     type: Array,
