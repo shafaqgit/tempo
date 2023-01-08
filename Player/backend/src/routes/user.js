@@ -4,13 +4,16 @@ const User = require("../models/user");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcrypt');
 
  // Store the selected Pictures in the 'public/uploads' directory
 const Storage=multer.diskStorage({
   destination : './public/uploads/',
   filename: (req, file, cb)=>{
     // cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-    cb(null, file.originalname);
+    let r = (Math.random() + 1).toString(36).substring(7);
+    cb(null, file.originalname+'-' +r+ '-' + path.extname(file.originalname));
+    // cb(null, file.originalname);
   }
 });
 
@@ -249,27 +252,47 @@ router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
   
   //   // Convert the data to a base64-encoded string
   //   const encoded = Buffer.from(data).toString('base64');
-  
 
-  User.findOneAndUpdate(
-    { _id: req.params.id },
-    {
-      $set: {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
-        profilePicture: req.file.filename,
-      },
-    },
-    { new: true },
-    (err, ans) => {
-      if (err) {
-        res.send(err);
-      } else return res.status(200).json(ans);
-    }
-  );
+  let keepGoing=false;
+  
+   User.findOne({_id: req.params.id})
+            .exec((error, user) => {
+              if(user.authenticate(req.body.OldPassword)){
+                keepGoing=true
+
+                User.findOneAndUpdate(
+                  { _id: req.params.id },
+                  {
+                    $set: {
+                       hash_password: bcrypt.hashSync(req.body.NewPassword, 10) ,
+                        
+                      },
+                      $set: {
+                        profilePicture: req.file.filename,
+                      },
+              
+                  },
+                  { new: true },
+                  (err, ans) => {
+                    if (err) {
+                      res.send(err);
+                    } else{
+                      console.log(ans);
+                      return res.status(200).json(ans);
+                    }
+                  }
+                );
+
+              }
+              else{
+                keepGoing=false;
+                return res.status(400).json(
+                  "Incorrect Old Password"
+                );
+              }
+
+            });
 });
-// });
 
 
 module.exports = router;
