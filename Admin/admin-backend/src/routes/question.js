@@ -7,6 +7,25 @@ const Category = require("../models/category");
 const path = require("path");
 const axios = require("axios");
 
+
+
+
+router.get('/viewquestion',(req, res)=>{
+  Question.find().exec((error, question)=> {
+      if(error){
+          return res.status(400).json({
+              message: "Error in Displaying question",
+              Err: error
+          });
+      }
+      else{
+          return res.status(200).json({
+              question
+          })
+      }
+  })
+});
+
 router.post("/addQuestion", (req, res) => {
   const x = Topic.findOne({ tName: req.body["topic"] })
     .then((topic) => {
@@ -32,7 +51,7 @@ router.post("/Parser", (req, res) => {
   console.log("Its Called..");
   if (req.files) {
         console.log("File Selected");
-        var temp = req.files.file.data;
+        var temp = req.files.myFile.data;
 
         const removeEmptyLines = (str) =>
         str

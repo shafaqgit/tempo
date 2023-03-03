@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 app.use(cors());
+// app.use(cors({ origin: 'http://localhost:19007' }));
+
 // const io = require("socket.io")(4000,{
 //   cors:{
 //       origin:"http://192.168.42.232:19000",
