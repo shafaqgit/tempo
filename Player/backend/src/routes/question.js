@@ -18,7 +18,7 @@ router.get('/questions',(req, res)=>{
               },
               {
                 $sample: {
-                  size: 100 //to shuffle values upto particular index 
+                  size: 10 //to shuffle values upto particular index 
                 }
               },
               {

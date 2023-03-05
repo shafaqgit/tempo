@@ -170,6 +170,44 @@ router.get("/friends/:userId", async (req, res) => {
   }
 });
 
+
+
+//get online friends
+router.get("/onlineFriends/:userId/:onlineUser", async (req, res) => {
+
+  // console.log("<------:Online FRIENDS API called:------> ")
+  // console.log("Online Users: ", req.params.onlineUser)
+  try {
+    const user = await User.findById(req.params.userId);
+    const friends = await Promise.all(
+      user.friends.map((friendId) => {
+        return User.findById(friendId);
+      })
+    );
+    let onlineFriendList = [];
+    friends.map((friend) => {
+      const { _id, firstName, lastName, username, email, profilePicture } =
+        friend;
+        // console.log("Friends Id: ",_id, "--> ",req.params.onlineUser.includes(_id));
+        if(req.params.onlineUser.includes(_id)){
+          onlineFriendList.push({
+        _id,
+        firstName,
+        lastName,
+        username,
+        email,
+        profilePicture,
+      });
+    }
+    });
+    res.status(200).json(onlineFriendList);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+
+
 //get friend Requests
 router.get("/friendRequests/:userId", async (req, res) => {
   try {

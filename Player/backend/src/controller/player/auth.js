@@ -106,6 +106,7 @@ else{
 }
 exports.signin =async (req , res ) => {
 
+    console.log("here login..");
     const emailValid = await validate(req.body.email)
     // if(emailValid.valid){
 
