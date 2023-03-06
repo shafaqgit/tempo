@@ -8,7 +8,11 @@ const { v4: uuidv4 } = require('uuid');
 const Memcached = require('memcached');
 const cors = require('cors');
 
-app.use(cors());
+const corsOptions = {
+  origin: '*',
+};
+
+app.use(cors(corsOptions));
 // app.use(cors({ origin: 'http://localhost:19007' }));
 
 // Connect to the Memcached server
@@ -19,6 +23,7 @@ const memcached = new Memcached('localhost:11211');
 const onlineUsers = new Set();
 const users = {};
 const questions={};
+const gameInProgess=[]
 
 io.on("connection", socket=> {
   // console.log("A user connected.."); 
@@ -44,6 +49,8 @@ io.on("connection", socket=> {
   });
 
   socket.on('sendChallengeRequest', (data) => {
+
+    // if(gameInProgess.indexOf(data.challengee) == -1){
     const challengeeSocketId = users[data.challengee];
     
     console.log(users);
@@ -53,7 +60,13 @@ io.on("connection", socket=> {
       challenger: data.challenger,
       challengee: data.challengee,
     });
-
+  // }
+  // else{
+  //   socket.emit('inProgress', {
+  //     // gameFrom: data.gameFrom,
+  //     gameWith: data.challengee,
+  //   });
+  // }
   });
 
 
@@ -82,6 +95,7 @@ io.on("connection", socket=> {
             timeLimit: 60
           },
           questions: questions[gameSessionId],
+          progress: [],
           currQues:0
         };
 
@@ -91,12 +105,13 @@ io.on("connection", socket=> {
           } else {
             console.log('Game session data stored in Memcached');
             
-          
+            gameInProgess.push(data.gameFrom,  data.gameWith);
 
             socket.to(gameFromSocketId).emit('startGame', {
               gameFrom: data.gameFrom,
               // gameWith: data.gameWith,
               gameData: sessionData,
+              sessionId:sessionId,
              
             });
 
@@ -106,6 +121,7 @@ io.on("connection", socket=> {
               gameWith: data.gameWith,
               
               gameData: sessionData,
+              sessionId:sessionId,
             });
           }
         });
@@ -118,6 +134,69 @@ io.on("connection", socket=> {
 
 
   });
+
+
+  socket.on('rejectChallenge', (data) => {
+    const gameWithSocketId = users[data.gameWith];
+    const gameFromSocketId = users[data.gameFrom];
+
+    socket.to(gameFromSocketId).emit('challengeDenied', {
+      // gameFrom: data.gameFrom,
+      gameWith: data.gameWith,
+      // gameData: sessionData,
+     
+    });
+
+  });
+
+  socket.on('answered', (data) => {
+    const selectedOpt=data.res;
+    const selectBy=data.currUserId;
+    const sessionId=data.sessionId;
+
+    
+
+    memcached.get(sessionId, (err, sessionData) => {
+      if (err) {
+        console.error("Error in memcached:",err);
+      } else if (!sessionData) {
+        console.log("Session data not found in Memcached");
+      } else {
+        console.log('Session data retrieved from Memcached:', sessionData.progress);
+        // update the session data object
+        sessionData.currQues = sessionData.currQues+ 1;
+        sessionData.progress.push({selectBy,selectedOpt});
+
+        let otherUser=sessionData.player1;
+        if(otherUser==selectBy){
+          otherUser=sessionData.player2;
+        }
+        const otherSocketId = users[otherUser];
+    
+        // store the updated session data object back in Memcached
+        memcached.replace(sessionId, sessionData, 360, (err) => {
+          if (err) {
+            console.error("Error updating session data in Memcached:",err);
+          } else {
+            console.log('Session data updated in Memcached');
+
+            socket.to(otherSocketId).emit('nextQues', {
+             
+              currQues:sessionData.currQues
+             
+            });
+
+
+            socket.emit('nextQues', {
+              currQues:sessionData.currQues
+            });
+          }
+        });
+      }
+    });
+
+  });
+
 
 });
 
