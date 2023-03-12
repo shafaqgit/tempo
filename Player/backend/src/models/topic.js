@@ -5,6 +5,28 @@ const TopicSchema = new mongoose.Schema({
     type: String,
     required:true,
     unique: true
+},
+locked:{
+  type:Boolean,
+  default:true,
+  
+}, 
+// threshold{
+//     type:Number
+// }
+
+assessmentCompleted:{
+  type:Boolean,
+  default:false,
+},
+highestScore:{
+  type:Number,
+  default:0,
+
+},
+averageScore:{
+  type:Number,
+  default:0,
 }
 }, {
   toJSON: {

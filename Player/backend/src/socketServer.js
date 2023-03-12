@@ -88,16 +88,33 @@ io.on("connection", socket=> {
 
         const sessionId = gameSessionId;
         const sessionData = {
-          player1: data.gameWith,
-          player2: data.gameFrom,
+          // player1: { 
+          //   id: data.gameWith, 
+          //   totalScore: 0
+          // }
+          // ,
+          // player2: { 
+          //   id: data.gameFrom,
+          //   totalScore: 0
+          // },
+          players:{},
           settings: {
             difficulty: 'easy',
             timeLimit: 60
           },
           questions: questions[gameSessionId],
-          progress: [],
+          // progress: {},
+          winner:"",
           currQues:0
         };
+        sessionData.players[data.gameWith]={
+          progress: {},
+          Total_Score:0
+        }
+        sessionData.players[data.gameFrom]={
+          progress: {},
+          Total_Score:0
+        }
 
         memcached.set(sessionId, sessionData, 360, (err) => {
           if (err) {
@@ -162,16 +179,21 @@ io.on("connection", socket=> {
       } else if (!sessionData) {
         console.log("Session data not found in Memcached");
       } else {
-        console.log('Session data retrieved from Memcached:', sessionData.progress);
+        // console.log('Session data retrieved from Memcached');
         // update the session data object
         sessionData.currQues = sessionData.currQues+ 1;
-        sessionData.progress.push({selectBy,selectedOpt});
+       
+        sessionData.players[selectBy].progress=selectedOpt;
 
-        let otherUser=sessionData.player1;
+        const twoUsers = Object.keys(sessionData.players);
+       
+        let otherUser=twoUsers[0];
         if(otherUser==selectBy){
-          otherUser=sessionData.player2;
+          otherUser=twoUsers[1];
         }
         const otherSocketId = users[otherUser];
+
+        console.log(sessionData.players);
     
         // store the updated session data object back in Memcached
         memcached.replace(sessionId, sessionData, 360, (err) => {
@@ -198,6 +220,102 @@ io.on("connection", socket=> {
   });
 
 
+  socket.on('submit', (data) => {
+    
+    const selectBy=data.currUserId;
+    const sessionId=data.sessionId;
+
+    memcached.get(sessionId, (err, sessionData) => {
+      if (err) {
+        console.error("Error in memcached:",err);
+      } else if (!sessionData) {
+        console.log("Session data not found in Memcached");
+      } else {
+        console.log('Session data retrieved from Memcached');
+       
+        let totalScore=0;
+
+        for (let p_id in sessionData.players){
+          sessionData.players[p_id].Total_Score = sessionData.players[p_id].progress.reduce((acc, curr) => {
+            if (curr.IsCorrect) {
+              return acc + 1;
+            } else {
+              return acc;
+            }
+          }, 0);
+        }
+  
+        // const p1_prog=sessionData.players.progress[sessionData.player1.id];
+        // const p2_prog=sessionData.progress[sessionData.player2.id];
+        let winner="";
+
+        // const p1_Correct = p1_prog.reduce((acc, curr) => {
+        //   if (curr.IsCorrect) {
+        //     return acc + 1;
+        //   } else {
+        //     return acc;
+        //   }
+        // }, 0);
+
+        // const p2_Correct = p2_prog.reduce((acc, curr) => {
+        //   if (curr.IsCorrect) {
+        //     return acc + 1;
+        //   } else {
+        //     return acc;
+        //   }
+        // }, 0);
+
+        // if(p1_Correct>p2_Correct){
+        //   winner=sessionData.player1.id;
+        // }
+        // else if(p1_Correct<p2_Correct){
+        //   winner=sessionData.player2.id;
+        // }
+        // sessionData.player1.totalScore=p1_Correct;
+        // sessionData.player2.totalScore=p2_Correct;
+        // sessionData.winner=winner;
+
+        // console.log("P1: ",p1_Correct)
+        // console.log("P2: ",p2_Correct)
+        // console.log("Winner: ",winner)
+
+        console.log("Final Result:", sessionData);
+
+
+        const twoUsers = Object.keys(sessionData.players);
+       
+        let otherUser=twoUsers[0];
+        if(otherUser==selectBy){
+          otherUser=twoUsers[1];
+        }
+        const otherSocketId = users[otherUser];
+
+        // store the updated session data object back in Memcached
+        memcached.replace(sessionId, sessionData, 360, (err) => {
+          if (err) {
+            console.error("Error updating session data in Memcached:",err);
+          } else {
+            console.log('Session data updated in Memcached');
+
+            socket.to(otherSocketId).emit('FinalResult', {
+             
+              gameData: sessionData,
+              sessionId:sessionId,
+             
+            });
+
+
+            socket.emit('FinalResult', {
+             
+              gameData: sessionData,
+              sessionId:sessionId,
+            });
+          }
+        });
+      }
+    });
+
+  });
 });
 
 

@@ -35,6 +35,8 @@ var transporter = nodemailer.createTransport({
 
 exports.signup= async(req, res ) =>
 {
+    const personal_topics = await Topic.find();
+
     const emailValid = await validate(req.body.email);
     if(emailValid.valid){
         
@@ -78,6 +80,7 @@ exports.signup= async(req, res ) =>
         lastName , 
         email, 
         password,
+        personalTopics:personal_topics,
         username: userName,
         role:'user'
     });

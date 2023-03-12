@@ -56,7 +56,13 @@ const userSchema = new mongoose.Schema({
   sentRequests: {
     type: Array,
     default: [],
-  }
+  },
+  personalTopics: {
+    // type: mongoose.Schema.Types.ObjectId, ref: 'Topic',
+    // required:true,
+    type: Array,
+default: [],
+},
 
 },{timestamps: true});
 
