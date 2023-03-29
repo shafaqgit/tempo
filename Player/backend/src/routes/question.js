@@ -1,12 +1,18 @@
 const express = require("express");
+const mongoose = require('mongoose');
+const querystring = require('querystring');
+const axios = require('axios');
 const router = express.Router();
+const User=require("../models/user");
 const Question = require("../models/question");
 const Topic = require("../models/topic");
 const Difficulty = require("../models/difficulty");
 const Category = require("../models/category");
+const Stage = require('../models/stage');
 const path = require("path");
 const question = require("../models/question");
-const mongoose = require("mongoose");
+const e = require("express");
+const { request } = require("http");
 
 // router.get('/questions',(req, res)=>{
 

@@ -49,13 +49,22 @@ router.post('/AddResult', async (req, res) => {
     const updatedPlayer= await axios.post('http://localhost:3000/api/updateSkill', {
       player: player,
       nextStage: nextStage,
-      topicid:topicid
+      topicid:topicid,
+      score:parseInt(myScore.data.percentageScore)
     });
 
+    const U_player=updatedPlayer.data
+    const P_score=parseInt(myScore.data.percentageScore)
+    const T_score=parseInt(myScore.data.totalScore)
+    const Totalmarks=parseInt(myScore.data.total)
+    const T_count=parseInt(myScore.data.count)
+    console.log("Player Score:", P_score)
+    console.log("Total  Score:", T_score)
     //player, nextStage, topicid 
-   
-    // res.status(200).send(updatedPlayer.data);
-    res.json(updatedPlayer.data)
+    const data = {U_player, P_score, T_score, Totalmarks, T_count};
+    
+    // res.json(updatedPlayer.data)
+    res.json(data)
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
