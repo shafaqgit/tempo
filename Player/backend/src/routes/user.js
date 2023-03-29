@@ -284,6 +284,7 @@ router.get("/nonFriends/:userId", async (req, res) => {
 
 // Edit the profile of user
 router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
+  // router.post("/:id/edit" ,async (req, res) => {
   
   // fs.readFile('./public/uploads/'+req.file.filename, (error, data) => {
   //   if (error) throw error;

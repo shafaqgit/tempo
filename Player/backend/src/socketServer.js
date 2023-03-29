@@ -7,6 +7,8 @@ const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const Memcached = require('memcached');
 const cors = require('cors');
+const Difficulty = require('./models/difficulty');
+const Stage = require('./models/stage');
 
 const corsOptions = {
   origin: '*',
@@ -20,16 +22,43 @@ const memcached = new Memcached('localhost:11211');
 
 
 
+
 const onlineUsers = new Set();
 const users = {};
 const questions={};
 const gameInProgess=[]
 
-io.on("connection", socket=> {
+
+
+io.on("connection", async (socket)=> {
   // console.log("A user connected.."); 
     // send the message to client
     console.log("New Connection..",socket.id);
 
+    const difficulties = {
+      easy: '',
+      medium: '',
+      hard: '',
+    };
+
+    const result = await Difficulty.find().exec();
+
+    result.forEach((item) => {
+      if (item.dName === 'easy') {
+        difficulties.easy = item._id;
+      } else if (item.dName === 'medium') {
+        difficulties.medium = item._id;
+      } else if (item.dName === 'hard') {
+        difficulties.hard = item._id;
+      }
+    });
+   
+
+  const stageResult = await Stage.findOne({ stageName: "S1" }, {weightage:1}).exec();
+
+  
+
+    
   socket.on('login', userId => {
     
     onlineUsers.add(userId);
@@ -78,7 +107,7 @@ io.on("connection", socket=> {
     
     console.log("Challenge Accepted",users);
     
-    const url = 'http://localhost:3000/api/questions';
+    const url = 'http://localhost:3000/api/questions_CMode/4/3/3';
 
     axios.get(url)
       .then(response => {
@@ -108,11 +137,11 @@ io.on("connection", socket=> {
           currQues:0
         };
         sessionData.players[data.gameWith]={
-          progress: {},
+          progress: [],
           Total_Score:0
         }
         sessionData.players[data.gameFrom]={
-          progress: {},
+          progress: [],
           Total_Score:0
         }
 
@@ -170,6 +199,7 @@ io.on("connection", socket=> {
     const selectedOpt=data.res;
     const selectBy=data.currUserId;
     const sessionId=data.sessionId;
+    // const timeTaken=data.timeTaken;
 
     
 
@@ -181,7 +211,13 @@ io.on("connection", socket=> {
       } else {
         // console.log('Session data retrieved from Memcached');
         // update the session data object
-        sessionData.currQues = sessionData.currQues+ 1;
+        if(sessionData.currQues < sessionData.questions.length){
+          sessionData.currQues = sessionData.currQues+ 1;
+        }
+        else{
+          sessionData.currQues = -1;
+        }
+        
        
         sessionData.players[selectBy].progress=selectedOpt;
 
@@ -224,6 +260,7 @@ io.on("connection", socket=> {
     
     const selectBy=data.currUserId;
     const sessionId=data.sessionId;
+    const leftGame=data.leftGame;
 
     memcached.get(sessionId, (err, sessionData) => {
       if (err) {
@@ -234,52 +271,78 @@ io.on("connection", socket=> {
         console.log('Session data retrieved from Memcached');
        
         let totalScore=0;
+       
+        let weightage=stageResult.weightage;
+        
 
-        for (let p_id in sessionData.players){
-          sessionData.players[p_id].Total_Score = sessionData.players[p_id].progress.reduce((acc, curr) => {
-            if (curr.IsCorrect) {
-              return acc + 1;
-            } else {
-              return acc;
-            }
-          }, 0);
-        }
+
+        //                           ( W(i) * I(i) )
+        //  Result =>  SUMMATION(i) -----------------
+        //                                 T(i)
   
+        // Calculating the Total Score
+        for (let p_id in sessionData.players){
+          if(leftGame===true && p_id === selectBy){
+            sessionData.players[p_id].Total_Score = -1
+          }else{
+            sessionData.players[p_id].Total_Score = sessionData.players[p_id].progress.reduce((acc, curr) => {
+              if (curr.IsCorrect) {
+                let add_factor=0;
+                if(curr.timeTaken===0){
+                  add_factor=1;
+                }
+                  if(curr.difficulty === difficulties.easy.toString()){
+
+                    return acc + (weightage[0]/(curr.timeTaken+add_factor)) 
+
+                  }else if(curr.difficulty === difficulties.medium.toString()){
+
+                    return acc + (weightage[1]/(curr.timeTaken+add_factor)) 
+
+                  }else if(curr.difficulty === difficulties.hard.toString()){
+
+                    return acc + (weightage[2]/(curr.timeTaken+add_factor)) 
+                  }
+                
+                } 
+              else {
+                return acc;
+              }
+            }, 0);
+          }
+        }
+
+        // Finding out the Winner
+       let max_score=-2;
+       let winner="";
+        for (let p_id in sessionData.players){
+          if( max_score < sessionData.players[p_id].Total_Score){
+            max_score=sessionData.players[p_id].Total_Score;
+            winner=p_id;
+          }
+        }
+
+        sessionData.winner=winner;
         // const p1_prog=sessionData.players.progress[sessionData.player1.id];
         // const p2_prog=sessionData.progress[sessionData.player2.id];
-        let winner="";
+       
 
-        // const p1_Correct = p1_prog.reduce((acc, curr) => {
-        //   if (curr.IsCorrect) {
-        //     return acc + 1;
-        //   } else {
-        //     return acc;
-        //   }
-        // }, 0);
+        const finalRes={
+          players: sessionData.players,
+          winner: sessionData.winner
+        }
 
-        // const p2_Correct = p2_prog.reduce((acc, curr) => {
-        //   if (curr.IsCorrect) {
-        //     return acc + 1;
-        //   } else {
-        //     return acc;
-        //   }
-        // }, 0);
+          axios.post('http://localhost:3000/api//multiplayerResults', finalRes)
+           .then(response => {
+             console.log(response.data);
+           })
+          .catch(error => {
+            console.error("Error in Storing result in Database: ",error);
+          });
+        
 
-        // if(p1_Correct>p2_Correct){
-        //   winner=sessionData.player1.id;
-        // }
-        // else if(p1_Correct<p2_Correct){
-        //   winner=sessionData.player2.id;
-        // }
-        // sessionData.player1.totalScore=p1_Correct;
-        // sessionData.player2.totalScore=p2_Correct;
-        // sessionData.winner=winner;
 
-        // console.log("P1: ",p1_Correct)
-        // console.log("P2: ",p2_Correct)
-        // console.log("Winner: ",winner)
-
-        console.log("Final Result:", sessionData);
+        // console.log("Final Result:", sessionData);
 
 
         const twoUsers = Object.keys(sessionData.players);
@@ -319,4 +382,4 @@ io.on("connection", socket=> {
 });
 
 
-server.listen(port,  ()=> console.log("server running on port "+ port));
+server.listen(port,  ()=> console.log("Socket server running on port "+ port));

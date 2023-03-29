@@ -27,6 +27,7 @@ const topicRoutes= require('./routes/topic');
 const difficultyRoutes= require('./routes/difficulty');
 const categoryRoutes= require('./routes/category');
 const userRoutes= require('./routes/user');
+const resultRoute=  require('./routes/result');
 const socketRoute= require('./socketServer');
 //environment variable
 env.config();
@@ -54,6 +55,7 @@ app.use('/api', topicRoutes);
 app.use('/api', difficultyRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', userRoutes);
+app.use('/api', resultRoute);
 
 
 app.listen(process.env.PORT, () => {

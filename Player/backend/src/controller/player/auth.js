@@ -1,4 +1,5 @@
 const User = require('../../models/user');
+const Topic = require('../../models/topic');
 const jwt = require('jsonwebtoken');
 const { validate } = require('deep-email-validator');
 var nodemailer = require('nodemailer');
