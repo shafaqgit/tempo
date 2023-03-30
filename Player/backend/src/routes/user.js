@@ -283,54 +283,102 @@ router.get("/nonFriends/:userId", async (req, res) => {
 });
 
 // Edit the profile of user
-router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
-  // router.post("/:id/edit" ,async (req, res) => {
+// router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
+//   // router.post("/:id/edit" ,async (req, res) => {
   
-  // fs.readFile('./public/uploads/'+req.file.filename, (error, data) => {
-  //   if (error) throw error;
+//   // fs.readFile('./public/uploads/'+req.file.filename, (error, data) => {
+//   //   if (error) throw error;
   
-  //   // Convert the data to a base64-encoded string
-  //   const encoded = Buffer.from(data).toString('base64');
+//   //   // Convert the data to a base64-encoded string
+//   //   const encoded = Buffer.from(data).toString('base64');
 
-  let keepGoing=false;
+//   let keepGoing=false;
   
-   User.findOne({_id: req.params.id})
-            .exec((error, user) => {
-              if(user.authenticate(req.body.OldPassword)){
-                keepGoing=true
+//    User.findOne({_id: req.params.id})
+//             .exec((error, user) => {
+//               if(user.authenticate(req.body.OldPassword)){
+//                 keepGoing=true
 
-                User.findOneAndUpdate(
-                  { _id: req.params.id },
-                  {
-                    $set: {
-                       hash_password: bcrypt.hashSync(req.body.NewPassword, 10) ,
+//                 User.findOneAndUpdate(
+//                   { _id: req.params.id },
+//                   {
+//                     $set: {
+//                        hash_password: bcrypt.hashSync(req.body.NewPassword, 10) ,
                         
-                      },
-                      $set: {
-                        profilePicture: req.file.filename,
-                      },
+//                       },
+//                       $set: {
+//                         profilePicture: req.file.filename,
+//                       },
               
-                  },
-                  { new: true },
-                  (err, ans) => {
-                    if (err) {
-                      res.send(err);
-                    } else{
-                      console.log(ans);
-                      return res.status(200).json(ans);
-                    }
-                  }
-                );
+//                   },
+//                   { new: true },
+//                   (err, ans) => {
+//                     if (err) {
+//                       res.send(err);
+//                     } else{
+//                       console.log(ans);
+//                       return res.status(200).json(ans);
+//                     }
+//                   }
+//                 );
 
-              }
-              else{
-                keepGoing=false;
-                return res.status(400).json(
-                  "Incorrect Old Password"
-                );
-              }
+//               }
+//               else{
+//                 keepGoing=false;
+//                 return res.status(400).json(
+//                   "Incorrect Old Password"
+//                 );
+//               }
 
-            });
+//             });
+// });
+router.post("/:id/edit", upload.single('UserImage'), async (req, res) => {
+// Check if user provided old password
+if (req.body.OldPassword  === undefined) {
+  console.log("ibtisam agya")
+
+  // Check if old password is correct
+  User.findOne({_id: req.params.id}).exec((error, user) => {
+    if (user.authenticate(req.body.OldPassword)) {
+      // Update password
+      User.findOneAndUpdate(
+        {_id: req.params.id},
+        { $set: { hash_password: bcrypt.hashSync(req.body.NewPassword, 10) } },
+        { new: true },
+        (err, ans) => {
+          if (err) {
+            return res.send(err); // add return statement here
+          } else {
+            console.log(ans);
+            return res.status(200).json(ans); // add return statement here
+          }
+        }
+      );
+    } else {
+      return res.status(400).json("Incorrect Old Password");
+    }
+  });
+} else if (req.file) { // use else if instead of if
+  console.log("ibtisam agya else if")
+
+  // Update profile picture
+  User.findOneAndUpdate(
+    { _id: req.params.id },
+    { $set: { profilePicture: req.file.filename } },
+    { new: true },
+    (err, ans) => {
+      if (err) {
+        return res.send(err); // add return statement here
+      } else{
+        console.log(ans);
+        return res.status(200).json(ans); // add return statement here
+      }
+    }
+  );
+}
+// Update other fields here using the same approach
+
+  
 });
 
 
