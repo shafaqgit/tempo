@@ -116,7 +116,9 @@ exports.signin =async (req , res ) => {
 
             User.findOne({email: req.body.email})
             .exec((error, user) => {
-                if (error) return res.status(400).json({error});
+                if (error) return res.status(400).json({
+                    message: 'Login Failed'
+                });
                 if(user){
                 if(user.authenticate(req.body.password) && user.role === 'user'){
                     const token = jwt.sign({id:user._id}, process.env.JWT_SECRET,{expiresIn:'1h'}); 
@@ -133,7 +135,7 @@ exports.signin =async (req , res ) => {
                     })
                 }
                 }else{
-                    return res.status(400).json({message:'Something went wrong'})
+                    return res.status(400).json({message:'Email is invalid'})
                 }
             });
     }
