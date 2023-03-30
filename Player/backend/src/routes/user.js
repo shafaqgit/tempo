@@ -332,54 +332,100 @@ router.get("/nonFriends/:userId", async (req, res) => {
 
 //             });
 // });
-router.post("/:id/edit", upload.single('UserImage'), async (req, res) => {
-// Check if user provided old password
-if (req.body.OldPassword  === undefined) {
-  console.log("ibtisam agya")
 
+// API to update user password
+router.post("/:id/update-password", async (req, res) => {
+  console.log("update password ")
   // Check if old password is correct
-  User.findOne({_id: req.params.id}).exec((error, user) => {
-    if (user.authenticate(req.body.OldPassword)) {
-      // Update password
-      User.findOneAndUpdate(
-        {_id: req.params.id},
-        { $set: { hash_password: bcrypt.hashSync(req.body.NewPassword, 10) } },
-        { new: true },
-        (err, ans) => {
-          if (err) {
-            return res.send(err); // add return statement here
-          } else {
-            console.log(ans);
-            return res.status(200).json(ans); // add return statement here
-          }
-        }
-      );
-    } else {
-      return res.status(400).json("Incorrect Old Password");
-    }
-  });
-} else if (req.file) { // use else if instead of if
-  console.log("ibtisam agya else if")
+  const user = await User.findOne({_id: req.params.id});
+  if (user.authenticate(req.body.OldPassword)) {
+    // Update password
+    const updatedUser = await User.findOneAndUpdate(
+      {_id: req.params.id},
+      { $set: { hash_password: bcrypt.hashSync(req.body.NewPassword, 10) } },
+      { new: true }
+    );
+    return res.status(200).json(updatedUser);
+  } else {
+    return res.status(400).json({message:"Incorrect Old Password"})
+  }
+});
 
-  // Update profile picture
-  User.findOneAndUpdate(
-    { _id: req.params.id },
-    { $set: { profilePicture: req.file.filename } },
-    { new: true },
-    (err, ans) => {
-      if (err) {
-        return res.send(err); // add return statement here
-      } else{
-        console.log(ans);
-        return res.status(200).json(ans); // add return statement here
-      }
-    }
-  );
-}
-// Update other fields here using the same approach
+// API to update user profile picture
+// API to update user profile picture
+router.post("/:id/update-profile-picture", upload.single('UserImage'), async (req, res) => {
+  const user = await User.findOne({_id: req.params.id});
+
+  // Check if the request contains a file
+  if (req.file) {
+    // Update profile picture
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { profilePicture: req.file.filename } },
+      { new: true }
+    );
+    return res.status(200).json(updatedUser);
+  } else {
+    // Keep previous profile picture if no new photo is uploaded
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { profilePicture: user.profilePicture } },
+      { new: true }
+    );
+    return res.status(200).json(updatedUser);
+  }
+});
+
+
+
+// router.post("/:id/edit", upload.single('UserImage'), async (req, res) => {
+// // Check if user provided old password
+// if (req.body.OldPassword  === undefined) {
+//   console.log("ibtisam agya")
+
+//   // Check if old password is correct
+//   User.findOne({_id: req.params.id}).exec((error, user) => {
+//     if (user.authenticate(req.body.OldPassword)) {
+//       // Update password
+//       User.findOneAndUpdate(
+//         {_id: req.params.id},
+//         { $set: { hash_password: bcrypt.hashSync(req.body.NewPassword, 10) } },
+//         { new: true },
+//         (err, ans) => {
+//           if (err) {
+//             return res.send(err); // add return statement here
+//           } else {
+//             console.log(ans);
+//             return res.status(200).json(ans); // add return statement here
+//           }
+//         }
+//       );
+//     } else {
+//       return res.status(400).json("Incorrect Old Password");
+//     }
+//   });
+// } else if (req.file) { // use else if instead of if
+//   console.log("ibtisam agya else if")
+
+//   // Update profile picture
+//   User.findOneAndUpdate(
+//     { _id: req.params.id },
+//     { $set: { profilePicture: req.file.filename } },
+//     { new: true },
+//     (err, ans) => {
+//       if (err) {
+//         return res.send(err); // add return statement here
+//       } else{
+//         console.log(ans);
+//         return res.status(200).json(ans); // add return statement here
+//       }
+//     }
+//   );
+// }
+// // Update other fields here using the same approach
 
   
-});
+// });
 
 
 module.exports = router;
