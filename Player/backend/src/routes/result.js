@@ -6,6 +6,8 @@ const MultiplayerResult = require('../models/multiplayerResult');
 
 
 function calculateNextStage(totalScore, stage){
+  console.log("Current Stage", stage)
+
   let newStage = parseInt(stage.slice(1));  // extract the numeric part and convert it to a number
   
   
@@ -26,8 +28,8 @@ function calculateNextStage(totalScore, stage){
     newStage=newStage+walkStep;  // increment the numeric part
     stage = "S" + newStage;  // combine the non-numeric part with the incremented numeric part to create the new string
   }
-
-  return(stage)
+  console.log(stage)
+  return("Next Stage", stage)
 }
 // POST /results
 router.post('/AddResult', async (req, res) => {
@@ -41,11 +43,10 @@ router.post('/AddResult', async (req, res) => {
     // const totalScore = await axios.get(`http://localhost:3000/api/calculateResult/${stage}/${optionsRes}`)
     
     
- 
-    const result = new Result({ player, Options_Res: optionsRes, Total_Score: parseInt(myScore.data.totalScore)});
-    
-    await result.save();
     const nextStage=calculateNextStage(parseInt(myScore.data.percentageScore),stage)
+    const result = new Result({ player, Options_Res: optionsRes, Total_Score: parseInt(myScore.data.totalScore),stage:nextStage});
+    await result.save();
+   
     const updatedPlayer= await axios.post('http://localhost:3000/api/updateSkill', {
       player: player,
       nextStage: nextStage,

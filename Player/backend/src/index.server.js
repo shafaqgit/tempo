@@ -23,6 +23,7 @@ app.use(cors());
 const authRoutes= require('./routes/auth');
 const playerRoutes= require('./routes/player/auth');
 const QuesRoutes= require('./routes/question');
+const QuesAnaRoutes=require('./routes/questionAnalytics');
 const topicRoutes= require('./routes/topic');
 const difficultyRoutes= require('./routes/difficulty');
 const categoryRoutes= require('./routes/category');
@@ -55,6 +56,7 @@ app.use('/api', topicRoutes);
 app.use('/api', difficultyRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', userRoutes);
+app.use('/api', QuesAnaRoutes);
 app.use('/api', resultRoute);
 
 
